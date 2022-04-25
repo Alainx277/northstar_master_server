@@ -1,0 +1,489 @@
+openapi: "3.0.0"
+info:
+  title: "Northstar API"
+  version: "0.0.1"
+tags:
+  - name: game server
+    description: API endpoints an each game server
+  - name: master server
+    description: API endpoints on the central server
+paths:
+  /server/add_server:
+    post:
+      summary: Adds a server to the server list.
+      description: The `authPort` must be reachable from the internet, otherwise the server entry will not be created.
+      tags:
+        - "master server"
+      parameters:
+        - in: query
+          name: port
+          required: true
+          schema:
+            type: integer
+          example: 37015
+          description: The port the game is listening on.
+        - in: query
+          name: authPort
+          required: true
+          schema:
+            type: integer
+          example: 8081
+          description: The port the authentication endpoint is listening on.
+        - in: query
+          name: name
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: description
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: map
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: playlist
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: maxPlayers
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: password
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                modinfo:
+                  $ref: '#/components/schemas/ModInfo'
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      success:
+                        type: boolean
+                        default: true
+                      id:
+                        type: string
+                      serverAuthToken:
+                        type: string
+                  - $ref: '#/components/schemas/Error'
+
+
+  /server/update_values:
+    post:
+      summary: Updates values for a server.
+      description: If passed the same parameters as `/server/add_server`, can also newly create a server entry.
+      tags:
+        - "master server"
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: port
+          schema:
+            type: integer
+          example: 37015
+          description: The port the game is listening on.
+        - in: query
+          name: authPort
+          schema:
+            type: integer
+          example: 8081
+          description: The port the authentication endpoint is listening on.
+        - in: query
+          name: name
+          schema:
+            type: string
+        - in: query
+          name: description
+          schema:
+            type: string
+        - in: query
+          name: map
+          schema:
+            type: string
+        - in: query
+          name: playlist
+          schema:
+            type: string
+        - in: query
+          name: maxPlayers
+          schema:
+            type: integer
+        - in: query
+          name: playerCount
+          schema:
+            type: integer
+        - in: query
+          name: password
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                modinfo:
+                  $ref: '#/components/schemas/ModInfo'
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      success:
+                        type: boolean
+                        default: true
+                      id:
+                        type: string
+                      serverAuthToken:
+                        type: string
+                  - type: object
+
+
+  /server/remove_server:
+    delete:
+      summary: Deletes a server from the server list.
+      tags:
+        - "master server"
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        200:
+          description: ""
+
+  /client/servers:
+    get:
+      summary: Returns a list of servers.
+      tags:
+        - "master server"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    description:
+                      type: string
+                    map:
+                      type: string
+                    playlist:
+                      type: string
+                    maxPlayers:
+                      type: integer
+                    hasPassword:
+                      type: boolean
+                      example: false
+                    playerCount:
+                      type: integer
+                    modInfo:
+                      $ref: '#/components/schemas/ModInfo'
+
+
+  /client/mainmenupromos:
+    get:
+      summary: Returns data to display on the main menu.
+      tags:
+        - "master server"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  newInfo:
+                    type: object
+                    properties:
+                      Title1:
+                        type: string
+                      Title2:
+                        type: string
+                      Title3:
+                        type: string
+                  largeButton:
+                    type: object
+                    properties:
+                      Title:
+                        type: string
+                      Text:
+                        type: string
+                      Url:
+                        type: string
+                      ImageIndex:
+                        type: integer
+                  smallButton1:
+                    type: object
+                    properties:
+                      Title:
+                        type: string
+                      Url:
+                        type: string
+                      ImageIndex:
+                        type: integer
+                  smallButton2:
+                    type: object
+                    properties:
+                      Title:
+                        type: string
+                      Url:
+                        type: string
+                      ImageIndex:
+                        type: integer
+
+
+  /client/origin_auth:
+    get:
+      summary: Authenticates with an origin account.
+      tags:
+        - "master server"
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: token
+          schema:
+            type: string
+          required: true
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      success:
+                        type: boolean
+                        default: true
+                      token:
+                        type: string
+                  - $ref: '#/components/schemas/Error'
+
+
+  /client/auth_with_self:
+    get:
+      summary: Authenticates a player for the local server.
+      description: Required to even open multiplayer, as the local server acts as the lobby.
+      tags:
+        - "master server"
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: playerToken
+          schema:
+            type: string
+          required: true
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      success:
+                        type: boolean
+                        default: true
+                      id:
+                        type: string
+                      authToken:
+                        type: string
+                      persistentData:
+                        type: array
+                        items:
+                          type: integer
+                  - $ref: '#/components/schemas/Error'                
+
+
+  /client/auth_with_server:
+    get:
+      summary: Authenticates a player for a server.
+      tags:
+        - "master server"
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: playerToken
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: server
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: password
+          schema:
+            type: string
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      success:
+                        type: boolean
+                        default: true
+                      ip:
+                        type: string
+                        format: ip
+                      port:
+                        type: integer
+                        example: 37015
+                      authToken:
+                        type: string
+                  - $ref: '#/components/schemas/Error'  
+
+
+  /accounts/write_persistence:
+    post:
+      summary: Updates the persistent data of an account.
+      description: Persistent data contains statistics and loadouts. The account must be playing on the requesting server.
+      tags:
+        - "master server"
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: serverId
+          schema:
+            type: string
+          required: true
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                  - $ref: '#/components/schemas/Error'
+
+
+  /verify:
+    get:
+      summary: Confirms this is a Northstar server.
+      description: Must return "I am a northstar server!".
+      tags:
+        - "game server"
+      responses:
+        200:
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "I am a northstar server!"
+
+
+
+  /authenticate_incoming_player:
+    post:
+      summary: Updates the persistent data of an account.
+      description: Persistent data contains statistics and loadouts. The account must be playing on the requesting server.
+      tags:
+        - "game server"
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: serverId
+          schema:
+            type: string
+          required: true
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                  - $ref: '#/components/schemas/Error'
+
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: false
+        enum:
+          type: string
+        message:
+          type: string
+
+    ModInfo:
+      type: array
+      items:
+        type: object
+        properties:
+          requiredOnClient:
+            type: boolean
+            example: false
+          name:
+            type: string
+          version:
+            type: string

@@ -1,0 +1,26 @@
+{
+	"newInfo": {
+		"Title1": "",
+		"Title2": "",
+		"Title3": ""
+	},
+
+	"largeButton": {
+		"Title": "",
+		"Text": "",
+		"Url": "",
+		"ImageIndex": 0
+	},
+	
+	"smallButton1": {
+		"Title": "",
+		"Url": "",
+		"ImageIndex": 0
+	},
+	
+	"smallButton2": {
+		"Title": "",
+		"Url": "",
+		"ImageIndex": 0
+	}
+}	
