@@ -1,7 +1,6 @@
 use warp::Filter;
 
-use crate::{Database, accounts::with_accounts, api::api_response};
-
+use crate::{accounts::with_accounts, api::api_response, Database};
 
 pub fn routes(
     database: Database,

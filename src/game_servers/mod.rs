@@ -25,7 +25,7 @@ pub struct Server {
     settings: ServerSettings,
     last_seen: Instant,
     player_count: Option<u32>,
-    mod_info: Option<ModInfo>
+    mod_info: Option<ModInfo>,
 }
 
 impl Server {
@@ -113,7 +113,9 @@ impl ServerList {
         }
 
         match self.servers.entry(server.id) {
-            std::collections::hash_map::Entry::Occupied(_) => panic!("Conflicting server unique id, this should never happen."),
+            std::collections::hash_map::Entry::Occupied(_) => {
+                panic!("Conflicting server unique id, this should never happen.")
+            }
             std::collections::hash_map::Entry::Vacant(v) => {
                 // Store ip address mapping
                 self.addresses

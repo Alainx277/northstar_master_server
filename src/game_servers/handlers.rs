@@ -1,6 +1,7 @@
 use std::{
+    borrow::Cow,
     net::SocketAddr,
-    time::{Duration, Instant}, borrow::Cow,
+    time::{Duration, Instant},
 };
 
 use serde_derive::{Deserialize, Serialize};
@@ -116,8 +117,12 @@ impl<'a> From<&'a Server> for ServerListEntry<'a> {
             playlist: &server.settings.playlist,
             max_players,
             has_password: server.settings.password.is_some(),
-            player_count: server.player_count.map(|c|c.min(max_players)).unwrap_or(0),
-            mod_info: server.mod_info.as_ref().map(Cow::Borrowed).unwrap_or_default(),
+            player_count: server.player_count.map(|c| c.min(max_players)).unwrap_or(0),
+            mod_info: server
+                .mod_info
+                .as_ref()
+                .map(Cow::Borrowed)
+                .unwrap_or_default(),
         }
     }
 }

@@ -8,8 +8,8 @@ mod api;
 mod auth;
 mod game_servers;
 mod id;
-mod promos;
 mod players;
+mod promos;
 
 #[macro_use]
 mod routes_macro;

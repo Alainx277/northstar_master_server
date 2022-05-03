@@ -80,7 +80,7 @@ impl AccountRepository {
             sqlx::query!(r#"SELECT username FROM accounts WHERE id = ?"#, id)
                 .fetch_one(&self.database)
                 .await?
-                .username
+                .username,
         )
     }
 

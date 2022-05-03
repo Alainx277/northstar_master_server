@@ -119,9 +119,10 @@ async fn check_version(header: String) -> Result<(), warp::Rejection> {
     let minimum_version = INSTANCE.get_or_init(|| {
         let var = std::env::var("LAUNCHER_VERSION");
         if var.is_err() {
-        warn!("LAUNCHER_VERSION is not set, any Northstar client version will be accepted")
+            warn!("LAUNCHER_VERSION is not set, any Northstar client version will be accepted")
         }
-        var.ok().map(|s| VersionReq::parse(s.as_str()).expect("LAUNCHER_VERSION has an invalid format"))
+        var.ok()
+            .map(|s| VersionReq::parse(s.as_str()).expect("LAUNCHER_VERSION has an invalid format"))
     });
 
     let version_requirement = match minimum_version {

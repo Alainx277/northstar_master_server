@@ -3,8 +3,6 @@ use thiserror::Error;
 
 use crate::{accounts::AccountRepository, api::ApiErrorKind};
 
-
-
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct PlayerInfoParam {
@@ -42,7 +40,10 @@ pub(super) async fn player_info(
     param: PlayerInfoParam,
     accounts: AccountRepository,
 ) -> Result<PlayerInfoResponse, PlayerError> {
-    let raw_data = accounts.get_data(param.id).await.map_err(|_| PlayerError::NotFound)?;
+    let raw_data = accounts
+        .get_data(param.id)
+        .await
+        .map_err(|_| PlayerError::NotFound)?;
     let player_data = player_data::from_u8(&raw_data).unwrap();
 
     Ok(PlayerInfoResponse {

@@ -291,7 +291,11 @@ pub(super) async fn authenticate(
             id: param.id,
             auth_token: truncated.clone(),
             server_auth_token: server.auth_token(),
-            username: accounts.get_name(param.id).await.unwrap().unwrap_or_default(),
+            username: accounts
+                .get_name(param.id)
+                .await
+                .unwrap()
+                .unwrap_or_default(),
         })
         .body(data.into_owned())
         .send()
