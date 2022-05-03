@@ -8,7 +8,7 @@ use crate::{
 pub fn routes(
     database: Database,
     servers: SharedServerList,
-) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     let base = warp::path("client");
     base.and(origin_authentication(database.clone()))
         .or(base.and(authenticate_self(database.clone())))

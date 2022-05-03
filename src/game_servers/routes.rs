@@ -4,7 +4,7 @@ use super::*;
 
 pub fn routes(
     servers: SharedServerList,
-) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     let base = warp::path("server");
     base.and(routes::create_server_entry(servers.clone()))
         .or(base.and(routes::remove_server(servers.clone())))

@@ -1,6 +1,6 @@
 use warp::Filter;
 
-pub fn routes() -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+pub fn routes() -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     warp::path!("client" / "mainmenupromos")
         .and(warp::get())
         .then(main_menu_promos)

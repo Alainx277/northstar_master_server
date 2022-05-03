@@ -11,6 +11,9 @@ mod id;
 mod promos;
 mod players;
 
+#[macro_use]
+mod routes_macro;
+
 type SharedServerList = Arc<RwLock<game_servers::ServerList>>;
 type Database = sqlx::Pool<sqlx::Sqlite>;
 
@@ -33,13 +36,13 @@ async fn main() {
 
     let servers: SharedServerList = Arc::new(RwLock::default());
     let routes = api::northstar_version()
-        .and(
-            game_servers::routes(servers.clone())
-                .or(auth::routes(database.clone(), servers.clone()))
-                .or(accounts::routes(database.clone(), servers))
-                .or(promos::routes())
-                .or(players::routes(database.clone()))
-        )
+        .and(balanced_or_tree!(
+            game_servers::routes(servers.clone()),
+            auth::routes(database.clone(), servers.clone()),
+            accounts::routes(database.clone(), servers),
+            promos::routes(),
+            players::routes(database.clone())
+        ))
         .with(warp::trace::request())
         .recover(api::version_error_handler);
 

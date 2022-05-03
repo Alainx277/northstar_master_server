@@ -7,7 +7,7 @@ use super::AccountRepository;
 pub fn routes(
     database: Database,
     servers: SharedServerList,
-) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     let base = warp::path("accounts");
     base.and(write_persistence(database, servers))
 }

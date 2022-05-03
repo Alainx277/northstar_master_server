@@ -5,7 +5,7 @@ use crate::{Database, accounts::with_accounts, api::api_response};
 
 pub fn routes(
     database: Database,
-) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     let base = warp::path("player");
     base.and(player_info(database))
 }
