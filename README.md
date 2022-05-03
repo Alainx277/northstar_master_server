@@ -69,7 +69,6 @@ Things that are missing:
 - Actual response codes
 - Store servers in database
 - Use distributed database for failover (postgresql?)
-- Replace existing server entry if registered for same IP and port
 - Compress stored player data
 
 With client changes:

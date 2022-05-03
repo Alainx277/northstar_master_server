@@ -100,15 +100,21 @@ impl ServerList {
     }
 
     fn push(&mut self, server: Server) -> Result<&Server, AddServerError> {
-        // TODO: Handle server entry with same address and port
-
-        // Limit number of servers on the same host
         if let Some(host_servers) = self.addresses.get(&server.ip()) {
+            // Limit number of servers on the same host
             let maximum_hosts = std::env::var("MAX_SERVERS_PER_HOST")
                 .map(|v| v.parse::<usize>().unwrap())
                 .unwrap_or(DEFAULT_MAX_SERVERS_PER_HOST);
             if host_servers.len() + 1 > maximum_hosts {
                 return Err(AddServerError::MaximumServersForHost);
+            }
+
+            // Remove existing server on same game port
+            if let Some(&existing_id) = host_servers
+                .iter()
+                .find(|&id| self.servers.get(id).unwrap().settings.port == server.settings.port)
+            {
+                self.remove(&existing_id);
             }
         }
 
