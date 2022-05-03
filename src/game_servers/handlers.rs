@@ -270,8 +270,8 @@ pub(super) async fn remove_server(
 
     let mut servers = servers.write().await;
     // Remove server if IP matches
-    if servers.servers.get(&param.id).map(|s| s.ip == ip) == Some(true) {
-        servers.servers.remove(&param.id);
+    if servers.get(&param.id).map(|s| s.ip == ip) == Some(true) {
+        servers.remove(&param.id);
     }
 
     warp::reply()
