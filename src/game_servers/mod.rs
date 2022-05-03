@@ -2,7 +2,7 @@ use bytes::buf::BufMut;
 use futures_util::{StreamExt, TryStreamExt};
 use serde_derive::{Deserialize, Serialize};
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     net::{IpAddr, SocketAddr},
     time::{Duration, Instant},
 };
@@ -80,10 +80,18 @@ impl Server {
     }
 }
 
+/// How many simultaneous servers can be registered for the same ip address
+const DEFAULT_MAX_SERVERS_PER_HOST: usize = 10;
+
+enum AddServerError {
+    MaximumServersForHost,
+}
+
 /// Stores all listed servers.
 #[derive(Default)]
 pub struct ServerList {
     servers: HashMap<UniqueId, Server>,
+    addresses: HashMap<IpAddr, HashSet<UniqueId>>,
 }
 
 impl ServerList {
@@ -91,17 +99,60 @@ impl ServerList {
         self.servers.iter().map(|(_, v)| v)
     }
 
-    fn push(&mut self, server: Server) -> Result<&Server, ()> {
+    fn push(&mut self, server: Server) -> Result<&Server, AddServerError> {
         // TODO: Handle server entry with same address and port
 
+        // Limit number of servers on the same host
+        if let Some(host_servers) = self.addresses.get(&server.ip()) {
+            let maximum_hosts = std::env::var("MAX_SERVERS_PER_HOST")
+                .map(|v| v.parse::<usize>().unwrap())
+                .unwrap_or(DEFAULT_MAX_SERVERS_PER_HOST);
+            if host_servers.len() + 1 > maximum_hosts {
+                return Err(AddServerError::MaximumServersForHost);
+            }
+        }
+
         match self.servers.entry(server.id) {
-            std::collections::hash_map::Entry::Occupied(_) => Err(()),
-            std::collections::hash_map::Entry::Vacant(v) => Ok(v.insert(server)),
+            std::collections::hash_map::Entry::Occupied(_) => panic!("Conflicting server unique id, this should never happen."),
+            std::collections::hash_map::Entry::Vacant(v) => {
+                // Store ip address mapping
+                self.addresses
+                    .entry(server.ip())
+                    .or_default()
+                    .insert(server.id);
+                //  Store server
+                Ok(v.insert(server))
+            }
         }
     }
 
     pub fn get(&self, k: &UniqueId) -> Option<&Server> {
         self.servers.get(k)
+    }
+
+    pub fn remove(&mut self, k: &UniqueId) {
+        if let Some(server) = self.servers.remove(k) {
+            let ip = &server.ip;
+            let host_servers = self.addresses.get_mut(ip).unwrap();
+            host_servers.remove(k);
+            if host_servers.is_empty() {
+                self.addresses.remove(ip);
+            }
+        }
+    }
+
+    /// Remove servers that haven't connected for some time
+    pub fn remove_inactive(&mut self) {
+        #[allow(clippy::needless_collect)]
+        let inactive: Vec<_> = self
+            .servers
+            .iter()
+            .filter(|(_, s)| s.last_seen_age() > Duration::from_secs(5 * 60))
+            .map(|(_, s)| s.id)
+            .collect();
+        for id in inactive.into_iter() {
+            self.remove(&id);
+        }
     }
 }
 

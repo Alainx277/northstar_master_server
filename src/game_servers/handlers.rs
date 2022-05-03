@@ -13,7 +13,9 @@ use crate::{
     SharedServerList,
 };
 
-use super::{verify::VerifyServerError, ModInfo, Server, ServerSettings, MAX_PLAYERS_LIMIT};
+use super::{
+    verify::VerifyServerError, AddServerError, ModInfo, Server, ServerSettings, MAX_PLAYERS_LIMIT,
+};
 
 #[derive(Error, Debug)]
 pub(super) enum CreateServerError {
@@ -21,6 +23,8 @@ pub(super) enum CreateServerError {
     Verification(#[from] VerifyServerError),
     #[error("mod info is invalid")]
     InvalidModInfo,
+    #[error("too many servers already registered on this host")]
+    MaximumServersForHost,
 }
 
 impl ApiErrorKind for CreateServerError {
@@ -28,6 +32,15 @@ impl ApiErrorKind for CreateServerError {
         match self {
             CreateServerError::Verification(e) => e.kind(),
             CreateServerError::InvalidModInfo => "INVALID_MOD_INFO",
+            CreateServerError::MaximumServersForHost => "MAX_SERVERS_FOR_IP",
+        }
+    }
+}
+
+impl From<AddServerError> for CreateServerError {
+    fn from(err: AddServerError) -> Self {
+        match err {
+            AddServerError::MaximumServersForHost => CreateServerError::MaximumServersForHost,
         }
     }
 }
@@ -70,9 +83,7 @@ pub(super) async fn create_server_entry(
 
     {
         let mut servers = servers.write().await;
-        servers
-            .push(server)
-            .expect("New server id conflicts with existing server");
+        servers.push(server)?;
     }
 
     Ok(response)
@@ -114,10 +125,7 @@ impl<'a> From<&'a Server> for ServerListEntry<'a> {
 // TODO: Cache this
 pub(super) async fn list_servers(servers: SharedServerList) -> impl warp::Reply {
     let mut servers = servers.write().await;
-    // Delete server entries after an hour
-    servers
-        .servers
-        .retain(|_, s| s.last_seen_age() < Duration::from_secs(60 * 60));
+    servers.remove_inactive();
     // Create server entries for those we have seen in the last minute
     let list: Vec<ServerListEntry> = servers
         .iter()
