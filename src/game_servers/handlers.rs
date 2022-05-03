@@ -26,6 +26,8 @@ pub(super) enum CreateServerError {
     InvalidModInfo,
     #[error("too many servers already registered on this host")]
     MaximumServersForHost,
+    #[error("the auth port is already used by another server on this host")]
+    ConflictingAuthPort,
 }
 
 impl ApiErrorKind for CreateServerError {
@@ -34,6 +36,7 @@ impl ApiErrorKind for CreateServerError {
             CreateServerError::Verification(e) => e.kind(),
             CreateServerError::InvalidModInfo => "INVALID_MOD_INFO",
             CreateServerError::MaximumServersForHost => "MAX_SERVERS_FOR_IP",
+            CreateServerError::ConflictingAuthPort => "AUTH_PORT_CONFLICT",
         }
     }
 }
@@ -42,6 +45,7 @@ impl From<AddServerError> for CreateServerError {
     fn from(err: AddServerError) -> Self {
         match err {
             AddServerError::MaximumServersForHost => CreateServerError::MaximumServersForHost,
+            AddServerError::ConflictingAuthPort => CreateServerError::ConflictingAuthPort,
         }
     }
 }

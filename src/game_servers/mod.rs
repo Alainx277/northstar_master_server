@@ -80,11 +80,12 @@ impl Server {
     }
 }
 
-/// How many simultaneous servers can be registered for the same ip address
+/// How many simultaneous servers can be registered for the same ip address.
 const DEFAULT_MAX_SERVERS_PER_HOST: usize = 10;
 
 enum AddServerError {
     MaximumServersForHost,
+    ConflictingAuthPort,
 }
 
 /// Stores all listed servers.
@@ -116,6 +117,20 @@ impl ServerList {
             {
                 self.remove(&existing_id);
             }
+        }
+
+        // Check for conflicting authentication port
+        if self
+            .addresses
+            .get(&server.ip())
+            .map(|servers| {
+                servers.iter().any(|id| {
+                    self.servers.get(id).unwrap().settings.auth_port == server.settings.auth_port
+                })
+            })
+            .unwrap_or(false)
+        {
+            return Err(AddServerError::ConflictingAuthPort);
         }
 
         match self.servers.entry(server.id) {
