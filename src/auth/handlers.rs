@@ -4,11 +4,16 @@ use serde_derive::{Deserialize, Serialize};
 use thiserror::Error;
 use tracing::debug;
 
-use crate::{accounts::AccountRepository, api::ApiErrorKind, id::UniqueId, SharedServerList};
+use crate::{
+    accounts::{AccountId, AccountRepository},
+    api::ApiErrorKind,
+    id::UniqueId,
+    SharedServerList,
+};
 
 #[derive(Deserialize)]
 pub(super) struct OriginAuthenticationParam {
-    id: u32,
+    id: AccountId,
     token: String,
 }
 
@@ -27,7 +32,7 @@ struct StryderParam {
 }
 
 impl StryderParam {
-    fn new(user_id: u32, code: String) -> Self {
+    fn new(user_id: AccountId, code: String) -> Self {
         Self {
             qt: "origin-requesttoken",
             kind: "server_token",
@@ -36,7 +41,7 @@ impl StryderParam {
             proto: 0,
             json: 1,
             env: "production",
-            user_id: hex::encode_upper(user_id.to_be_bytes()),
+            user_id: hex::encode_upper(user_id.0.to_be_bytes()),
         }
     }
 }
@@ -99,7 +104,7 @@ pub(super) async fn origin_authentication(
     // }
 
     let response: StryderResponse = response.json().await?;
-    debug!(?response, account_id = param.id, "stryder response");
+    debug!(?response, account_id = param.id.0, "stryder response");
     if response.has_online_access == '1' && response.store_uri.contains("titanfall-2") {
         if !accounts.exists(param.id).await.unwrap() {
             accounts
@@ -122,7 +127,7 @@ pub(super) async fn origin_authentication(
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct AuthenticateSelfParam {
-    id: u32,
+    id: AccountId,
     player_token: UniqueId,
 }
 
@@ -178,7 +183,7 @@ pub(super) async fn authenticate_self(
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct AuthenticateParam {
-    id: u32,
+    id: AccountId,
     player_token: UniqueId,
     server: UniqueId,
     #[serde(with = "serde_with::rust::string_empty_as_none")]
@@ -232,7 +237,7 @@ impl From<reqwest::Error> for AuthenticateError {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct AuthenticateIncomingParam {
-    id: u32,
+    id: AccountId,
     auth_token: String,
     server_auth_token: UniqueId,
     username: String,

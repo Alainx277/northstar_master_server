@@ -8,12 +8,12 @@ use warp::{multipart::FormData, Buf};
 
 use crate::{accounts::default_persistent_data, api::ApiErrorKind, id::UniqueId, SharedServerList};
 
-use super::AccountRepository;
+use super::{AccountId, AccountRepository};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct WritePersistenceParam {
-    id: u32,
+    id: AccountId,
     server_id: UniqueId,
 }
 
