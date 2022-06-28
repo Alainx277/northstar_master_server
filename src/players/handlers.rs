@@ -1,12 +1,15 @@
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::{accounts::AccountRepository, api::ApiErrorKind};
+use crate::{
+    accounts::{AccountId, AccountRepository},
+    api::ApiErrorKind,
+};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct PlayerInfoParam {
-    id: u32,
+    id: AccountId,
 }
 
 #[derive(Error, Debug)]
@@ -26,7 +29,7 @@ impl ApiErrorKind for PlayerError {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct PlayerInfoResponse {
-    id: u32,
+    id: AccountId,
     name: Option<String>,
     gen: i32,
     xp: i32,

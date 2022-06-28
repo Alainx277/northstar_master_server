@@ -2,6 +2,8 @@ use std::{borrow::Cow, net::IpAddr};
 
 use crate::{id::UniqueId, Database};
 
+use super::AccountId;
+
 #[derive(sqlx::FromRow)]
 pub struct PersistenceAuthData {
     pub current_server: Option<UniqueId>,
@@ -17,7 +19,7 @@ impl AccountRepository {
         Self { database }
     }
 
-    pub async fn exists(&self, id: u32) -> Result<bool, sqlx::Error> {
+    pub async fn exists(&self, id: AccountId) -> Result<bool, sqlx::Error> {
         Ok(
             sqlx::query!(r#"SELECT 1 as none FROM accounts WHERE id = ?"#, id)
                 .fetch_optional(&self.database)
@@ -26,14 +28,14 @@ impl AccountRepository {
         )
     }
 
-    pub async fn create(&self, id: u32) -> Result<(), sqlx::Error> {
+    pub async fn create(&self, id: AccountId) -> Result<(), sqlx::Error> {
         sqlx::query!(r#"INSERT INTO accounts (id) VALUES (?)"#, id)
             .execute(&self.database)
             .await?;
         Ok(())
     }
 
-    pub async fn create_token(&self, id: u32, ip: IpAddr) -> Result<UniqueId, sqlx::Error> {
+    pub async fn create_token(&self, id: AccountId, ip: IpAddr) -> Result<UniqueId, sqlx::Error> {
         let token = UniqueId::new(&mut rand::thread_rng());
         let raw_token = &token.bytes()[..];
         let ip = ip.to_string();
@@ -51,7 +53,7 @@ impl AccountRepository {
         Ok(token)
     }
 
-    pub async fn authenticate(&self, id: u32, token: UniqueId) -> Result<bool, sqlx::Error> {
+    pub async fn authenticate(&self, id: AccountId, token: UniqueId) -> Result<bool, sqlx::Error> {
         let raw_token = &token.bytes()[..];
         let result = sqlx::query!(
             r#"SELECT token_created as "token_created!" FROM accounts WHERE id = ? AND token = ?"#,
@@ -75,7 +77,7 @@ impl AccountRepository {
         Ok(false)
     }
 
-    pub async fn get_name(&self, id: u32) -> Result<Option<String>, sqlx::Error> {
+    pub async fn get_name(&self, id: AccountId) -> Result<Option<String>, sqlx::Error> {
         Ok(
             sqlx::query!(r#"SELECT username FROM accounts WHERE id = ?"#, id)
                 .fetch_one(&self.database)
@@ -84,7 +86,7 @@ impl AccountRepository {
         )
     }
 
-    pub async fn get_data(&self, id: u32) -> Result<Cow<'static, [u8]>, sqlx::Error> {
+    pub async fn get_data(&self, id: AccountId) -> Result<Cow<'static, [u8]>, sqlx::Error> {
         Ok(
             sqlx::query!(r#"SELECT persistent_data FROM accounts WHERE id = ?"#, id)
                 .fetch_one(&self.database)
@@ -94,7 +96,7 @@ impl AccountRepository {
         )
     }
 
-    pub async fn set_data(&self, id: u32, data: &[u8]) -> Result<(), sqlx::Error> {
+    pub async fn set_data(&self, id: AccountId, data: &[u8]) -> Result<(), sqlx::Error> {
         sqlx::query!(
             r#"UPDATE accounts SET persistent_data = ? WHERE id = ?"#,
             data,
@@ -105,7 +107,7 @@ impl AccountRepository {
         Ok(())
     }
 
-    pub async fn get_auth(&self, id: u32) -> Result<PersistenceAuthData, sqlx::Error> {
+    pub async fn get_auth(&self, id: AccountId) -> Result<PersistenceAuthData, sqlx::Error> {
         let row = sqlx::query!(
             r#"SELECT current_server, last_auth_ip as "last_auth_ip!" FROM accounts
             WHERE id = ? AND last_auth_ip IS NOT NULL"#,
@@ -121,7 +123,11 @@ impl AccountRepository {
         })
     }
 
-    pub async fn join_server(&self, id: u32, server_id: &UniqueId) -> Result<(), sqlx::Error> {
+    pub async fn join_server(
+        &self,
+        id: AccountId,
+        server_id: &UniqueId,
+    ) -> Result<(), sqlx::Error> {
         let raw_server_id = &server_id.bytes()[..];
         sqlx::query!(
             r#"UPDATE accounts SET current_server = ? WHERE id = ?"#,
